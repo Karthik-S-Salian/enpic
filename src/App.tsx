@@ -1,46 +1,34 @@
 import { createSignal } from "solid-js";
-import logo from "./assets/logo.svg";
 import { invoke } from "@tauri-apps/api/core";
-import "./App.css";
 
 function App() {
-  const [greetMsg, setGreetMsg] = createSignal("");
-  const [name, setName] = createSignal("");
-
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name: name() }));
-  }
+  const [images, setImages] = createSignal<string[]>([]);
 
   let fileInput: HTMLInputElement | undefined;
 
-
   async function uploadImages() {
-    if (!fileInput) return;
+    if (!fileInput?.files) return;
 
-    const promises = []
+    const buffers = await Promise.all(
+      Array.from(fileInput.files).map(file => file.arrayBuffer())
+    );
 
-    for (const file of fileInput.files ?? []) {
-      promises.push(file.arrayBuffer())
-    }
+    const payload = buffers.map(buf => Array.from(new Uint8Array(buf)));
 
-    const imageBuffers = await Promise.all(promises);
-
-    const imagePayload = imageBuffers.map(buf => Array.from(new Uint8Array(buf)));
-
-    await invoke("process_images", {
-      images: imagePayload
-    });
+    const result = await invoke<string[]>("process_images", { images: payload });
+    setImages(result);
   }
 
-
-
-
-
   return (
-    <main class="container">
-      <input type="file" ref={fileInput} multiple></input>
+    <main>
+      <input type="file" multiple ref={el => fileInput = el} />
       <button onClick={uploadImages}>Send</button>
+
+      <div>
+        {images().map((src, i) => (
+          <img src={src} alt={`img-${i}`} />
+        ))}
+      </div>
     </main>
   );
 }

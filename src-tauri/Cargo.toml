@@ -23,4 +23,8 @@ tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 image = "0.25.6"
+ndarray = "0.16.1"
+ort = {version = "=2.0.0-rc.9",features= ["cuda"] }
+ort-sys = { version = "=2.0.0-rc.9", default-features = false } # match whatever version of `ort` you use
+base64 = "0.22.1"
 
